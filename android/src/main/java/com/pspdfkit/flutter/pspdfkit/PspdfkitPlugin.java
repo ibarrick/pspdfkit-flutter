@@ -8,6 +8,7 @@ import com.pspdfkit.PSPDFKit;
 import com.pspdfkit.configuration.activity.PdfActivityConfiguration;
 import com.pspdfkit.ui.PdfActivity;
 
+import androidx.fragment.app.FragmentActivity;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -33,6 +34,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "pspdfkit");
         channel.setMethodCallHandler(new PspdfkitPlugin(registrar.activeContext()));
+        registrar.platformViewRegistry().registerViewFactory("com.pspdfkit.flutter/pdfview", new PdfViewFactory(registrar.messenger(), (FragmentActivity) registrar.activity()));
     }
 
     @Override
@@ -45,7 +47,10 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 String licenseKey = call.argument("licenseKey");
                 requireNotNullNotEmpty(licenseKey, "License key");
                 PSPDFKit.initialize(context, licenseKey);
-                break;    
+                break;
+            case "resizeView":
+
+                break;
             case "present":
                 String documentPath = call.argument("document");
                 requireNotNullNotEmpty(documentPath, "Document path");

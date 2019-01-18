@@ -50,5 +50,6 @@ android {
 }
 
 dependencies {
+    implementation "androidx.appcompat:appcompat:1.0.0"
     implementation "com.pspdfkit:$pspdfkitMavenModuleName:$pspdfkitVersion"
 }

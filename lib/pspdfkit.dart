@@ -18,7 +18,7 @@ class Pspdfkit {
   static Future<void> openPdfDocument({String name, String path}) =>
     _channel.invokeMethod('openPdfDocument', <String, dynamic>{'uri': path, 'name': name });
 
-  static Future<void> fillPdfForm({String name, Map<String,String> fields}) =>
+  static Future<void> fillPdfForm({String name, Map<String, dynamic> fields}) =>
     _channel.invokeMethod('fillPdfForm', <String, dynamic>{'name': name, 'fields': fields});
 
   static Future<void> flattenPdfForm({String name}) =>

@@ -15,6 +15,18 @@ class Pspdfkit {
   static Future<void> present(String document) =>
     _channel.invokeMethod('present', <String, dynamic>{'document': document});
 
+  static Future<void> openPdfDocument({String name, String path}) =>
+    _channel.invokeMethod('openPdfDocument', <String, dynamic>{'uri': path, 'name': name });
+
+  static Future<void> fillPdfForm({String name, Map<String,String> fields}) =>
+    _channel.invokeMethod('fillPdfForm', <String, dynamic>{'name': name, 'fields': fields});
+
+  static Future<void> flattenPdfForm({String name}) =>
+    _channel.invokeMethod('flattenPdfForm', <String, dynamic>{'name': name});
+
+   static Future<void> mergePdfs({String name, List<String> names}) =>
+    _channel.invokeMethod('flattenPdfForm', <String, dynamic>{'name': name, 'names': names});
+
   static Future<bool> checkWriteExternalStoragePermission() =>
     SimplePermissions.checkPermission(Permission.WriteExternalStorage);
 

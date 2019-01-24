@@ -35,6 +35,7 @@ import com.pspdfkit.ui.signatures.SignaturePickerFragment;
 import com.pspdfkit.ui.signatures.SignatureSignerDialog;
 import com.pspdfkit.ui.thumbnail.PdfScrollableThumbnailBar;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -90,62 +91,7 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
         this.messageChannel = messageChannel;
         methodChannel = new MethodChannel(messenger, "com.pspdfkit.flutter/pdfview_" + id);
         methodChannel.setMethodCallHandler(this);
-        fragment.addDocumentListener(new DocumentListener() {
-            @Override
-            public void onDocumentLoaded(@NonNull PdfDocument pdfDocument) {
-
-            }
-
-            @Override
-            public void onDocumentLoadFailed(@NonNull Throwable throwable) {
-
-            }
-
-            @Override
-            public boolean onDocumentSave(@NonNull PdfDocument pdfDocument, @NonNull DocumentSaveOptions documentSaveOptions) {
-                return false;
-            }
-
-            @Override
-            public void onDocumentSaved(@NonNull PdfDocument pdfDocument) {
-
-            }
-
-            @Override
-            public void onDocumentSaveFailed(@NonNull PdfDocument pdfDocument, @NonNull Throwable throwable) {
-
-            }
-
-            @Override
-            public void onDocumentSaveCancelled(PdfDocument pdfDocument) {
-
-            }
-
-            @Override
-            public boolean onPageClick(@NonNull PdfDocument pdfDocument, int i, @Nullable MotionEvent motionEvent, @Nullable PointF pointF, @Nullable Annotation annotation) {
-                return false;
-            }
-
-            @Override
-            public boolean onDocumentClick() {
-                return false;
-            }
-
-            @Override
-            public void onPageChanged(@NonNull PdfDocument pdfDocument, int i) {
-                
-            }
-
-            @Override
-            public void onDocumentZoomed(@NonNull PdfDocument pdfDocument, int i, float v) {
-
-            }
-
-            @Override
-            public void onPageUpdated(@NonNull PdfDocument pdfDocument, int i) {
-
-            }
-        });
+        fragment.addDocumentListener(new PageListener(messageChannel));
     }
 
     @Override
@@ -165,6 +111,7 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                 FragmentTransaction tran = fm.beginTransaction();
                 tran.add(fragment2, "PsPDFKit");
                 tran.commit();
+                fragment2.addDocumentListener(new PageListener(messageChannel));
                 fm.registerFragmentLifecycleCallbacks(new FragmentManager.FragmentLifecycleCallbacks() {
                     @Override
                     public void onFragmentActivityCreated(FragmentManager fm, Fragment f, Bundle savedInstanceState) {
@@ -177,6 +124,15 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                         }
                     }
                 }, false);
+                break;
+            case "incrementPage":
+                fragment.setPageIndex((fragment.getPageIndex() + 1) % fragment.getDocument().getPageCount());
+                break;
+            case "decrementPage":
+                fragment.setPageIndex((fragment.getPageIndex() + 1) % fragment.getDocument().getPageCount());
+                break;
+            case "setPage":
+                fragment.setPageIndex(methodCall.argument("page"));
                 break;
             case "collectSignature":
                 SignaturePickerFragment.show(activity.getSupportFragmentManager(), new SignaturePickerFragment.OnSignaturePickedListener() {
@@ -229,4 +185,70 @@ class PdfFragmentContainer extends FrameLayout {
         this.setLayoutParams(new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
     }
 
+}
+
+class PageListener implements DocumentListener {
+    BasicMessageChannel messageChannel;
+
+    public PageListener(BasicMessageChannel messageChannel) {
+        this.messageChannel = messageChannel;
+    }
+
+    @Override
+    public void onDocumentLoaded(@NonNull PdfDocument pdfDocument) {
+
+    }
+
+    @Override
+    public void onDocumentLoadFailed(@NonNull Throwable throwable) {
+
+    }
+
+    @Override
+    public boolean onDocumentSave(@NonNull PdfDocument pdfDocument, @NonNull DocumentSaveOptions documentSaveOptions) {
+        return false;
+    }
+
+    @Override
+    public void onDocumentSaved(@NonNull PdfDocument pdfDocument) {
+
+    }
+
+    @Override
+    public void onDocumentSaveFailed(@NonNull PdfDocument pdfDocument, @NonNull Throwable throwable) {
+
+    }
+
+    @Override
+    public void onDocumentSaveCancelled(PdfDocument pdfDocument) {
+
+    }
+
+    @Override
+    public boolean onPageClick(@NonNull PdfDocument pdfDocument, int i, @Nullable MotionEvent motionEvent, @Nullable PointF pointF, @Nullable Annotation annotation) {
+        return false;
+    }
+
+    @Override
+    public boolean onDocumentClick() {
+        return false;
+    }
+
+    @Override
+    public void onPageChanged(@NonNull PdfDocument pdfDocument, int i) {
+        HashMap<String, Integer> msg = new HashMap<String, Integer>();
+        msg.put("page", new Integer(i));
+        Log.d("Servisuite", "ON PAGE CHANGED");
+        messageChannel.send(msg);
+    }
+
+    @Override
+    public void onDocumentZoomed(@NonNull PdfDocument pdfDocument, int i, float v) {
+
+    }
+
+    @Override
+    public void onPageUpdated(@NonNull PdfDocument pdfDocument, int i) {
+
+    }
 }

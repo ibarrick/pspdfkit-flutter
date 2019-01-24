@@ -42,6 +42,7 @@ import java.util.Map;
 
 import androidx.fragment.app.FragmentActivity;
 import io.flutter.plugin.common.BasicMessageChannel;
+import io.flutter.plugin.common.JSONMessageCodec;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -55,7 +56,7 @@ import static io.flutter.util.PathUtils.getFilesDir;
 /**
  * Pspdfkit Plugin.
  */
-public class PspdfkitPlugin implements MethodCallHandler, BasicMessageChannel.MessageHandler {
+public class PspdfkitPlugin implements MethodCallHandler {
     private static final String FILE_SCHEME = "file:///";
     private final Context context;
 
@@ -70,10 +71,9 @@ public class PspdfkitPlugin implements MethodCallHandler, BasicMessageChannel.Me
      */
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "pspdfkit");
-        final BasicMessageChannel messageChannel = new BasicMessageChannel(registrar.messenger(), "pspdfkit_messages", new StandardMessageCodec());
+        final BasicMessageChannel messageChannel = new BasicMessageChannel<Object>(registrar.messenger(), "pspdfkit_messages", JSONMessageCodec.INSTANCE);
         PspdfkitPlugin plugin = new PspdfkitPlugin(registrar.activeContext());
         channel.setMethodCallHandler(plugin);
-        messageChannel.setMessageHandler(plugin);
         registrar.platformViewRegistry().registerViewFactory("com.pspdfkit.flutter/pdfview", new PdfViewFactory(registrar.messenger(), (FragmentActivity) registrar.activity(), openPdfs, messageChannel));
     }
 
@@ -105,7 +105,7 @@ public class PspdfkitPlugin implements MethodCallHandler, BasicMessageChannel.Me
                 mapping.put("Signature", "EstimateSignature");
                 task = PdfProcessorTask.fromDocument(doc)
                         .setFormFieldNameMappings(mapping);
-                outputFile = new File(getFilesDir(this.context) + name + "-renamed.pdf");
+                outputFile = new File(getFilesDir(this.context) + "/" + name + "-renamed.pdf");
                 PdfProcessor.processDocument(task, outputFile);
                 doc = null;
                 try {
@@ -205,7 +205,7 @@ public class PspdfkitPlugin implements MethodCallHandler, BasicMessageChannel.Me
                         .changeFormsOfType(FormType.LISTBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.TEXT, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.RADIOBUTTON, PdfProcessorTask.AnnotationProcessingMode.FLATTEN);
-                outputFile = new File(getFilesDir(this.context) + name + ".pdf");
+                outputFile = new File(getFilesDir(this.context) + "/" + name + ".pdf");
                 PdfProcessor.processDocument(task, outputFile);
                 PdfDocument newDoc = null;
                 try {
@@ -216,6 +216,16 @@ public class PspdfkitPlugin implements MethodCallHandler, BasicMessageChannel.Me
                 openPdfs.put(name, newDoc);
                 result.success(null);
                 break;
+            case "clearFiles":
+                File dir = new File(getFilesDir(this.context));
+                File[] files = dir.listFiles();
+                if (files != null) {
+                    for (int i = 0; i < dir.length(); ++i) {
+                        files[i].delete();
+                    }
+                }
+                result.success(null);
+                break;
             case "flattenSignatures":
                 name = call.argument("name");
                 doc = openPdfs.get(name);
@@ -223,7 +233,7 @@ public class PspdfkitPlugin implements MethodCallHandler, BasicMessageChannel.Me
                         .changeAllAnnotations(PdfProcessorTask.AnnotationProcessingMode.KEEP)
                         .changeFormsOfType(FormType.SIGNATURE, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeAnnotationsOfType(AnnotationType.INK, PdfProcessorTask.AnnotationProcessingMode.FLATTEN);
-                outputFile = new File(getFilesDir(this.context) + name + "-signed.pdf");
+                outputFile = new File(getFilesDir(this.context) + "/" + name + "-signed.pdf");
                 PdfProcessor.processDocument(task, outputFile);
                 PdfDocument outDoc = null;
                 try {
@@ -347,8 +357,4 @@ public class PspdfkitPlugin implements MethodCallHandler, BasicMessageChannel.Me
         return extension.equals("png") || extension.equals("jpg") || extension.equals("jpeg");
     }
 
-    @Override
-    public void onMessage(Object o, BasicMessageChannel.Reply reply) {
-
-    }
 }

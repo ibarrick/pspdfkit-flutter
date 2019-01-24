@@ -126,5 +126,17 @@ class PdfViewController {
   Future<void> collectSignature() async {
     return _channel.invokeMethod('collectSignature');
   }
+
+  Future<void> incrementPage() async {
+    return _channel.invokeMethod('incrementPage');
+  }
+
+  Future<void> decrementPage() async {
+    return _channel.invokeMethod('decrementPage');
+  }
+
+  Future<void> setPage(int i) async {
+    return _channel.invokeMethod('setPage', {'page': i});
+  }
 }
 

@@ -5,6 +5,7 @@ import 'simple_permissions.dart';
 
 class Pspdfkit {
   static const MethodChannel _channel = const MethodChannel('pspdfkit');
+  static const BasicMessageChannel messageChannel = const BasicMessageChannel("pspdfkit_messages", JSONMessageCodec());
 
   static Future<dynamic> get frameworkVersion =>
       _channel.invokeMethod('frameworkVersion');

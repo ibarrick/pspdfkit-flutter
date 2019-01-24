@@ -5,9 +5,10 @@ import 'package:flutter/rendering.dart';
 
 class PdfView extends StatefulWidget {
   final String uri;
-  final Map<String, num> rect;
+  final Function onPlatformViewCreated;
+  final String documentName;
 
-  PdfView({this.uri, this.rect});
+  PdfView({this.uri, this.documentName, this.onPlatformViewCreated});
 
   @override
   State<StatefulWidget> createState() => _PdfViewState();
@@ -34,15 +35,15 @@ class _PdfViewState extends State<PdfView> {
             },
             child: _rect != null ? AndroidView(
                 viewType: 'com.pspdfkit.flutter/pdfview',
+                onPlatformViewCreated: (int id) {
+                  if (widget.onPlatformViewCreated != null) {
+                    widget.onPlatformViewCreated(new PdfViewController._(id));
+                  }
+                },
                 creationParams:
                 {
                   'uri': widget.uri,
-                  'rect': {
-                    'top': 80.0,
-                    'left': 40.0,
-                    'width': 500.0,
-                    'height': 500.0
-                  }
+                  'documentName': widget.documentName
                 }
                 ,
                 creationParamsCodec: StandardMessageCodec()
@@ -109,6 +110,21 @@ class _PdfViewPlaceholderRender extends RenderProxyBox {
       _rect = rect;
       notifyRect();
     }
+  }
+}
+
+class PdfViewController {
+  PdfViewController._(int id)
+      : _channel = new MethodChannel('com.pspdfkit.flutter/pdfview_$id');
+
+  final MethodChannel _channel;
+
+  Future<void> toggleFormEditing() async {
+    return _channel.invokeMethod('toggleFormEditing');
+  }
+
+  Future<void> collectSignature() async {
+    return _channel.invokeMethod('collectSignature');
   }
 }
 

@@ -22,7 +22,7 @@ class Pspdfkit {
   static Future<void> fillPdfForm({String name, Map<String, dynamic> fields}) =>
     _channel.invokeMethod('fillPdfForm', <String, dynamic>{'name': name, 'fields': fields});
 
-  static Future<void> flattenPdfForm({String name}) =>
+  static Future<void> flattenPdfForm(String name) =>
     _channel.invokeMethod('flattenPdfForm', <String, dynamic>{'name': name});
 
   static Future<void> printDocument({String uri}) =>
@@ -48,6 +48,9 @@ class Pspdfkit {
 
    static Future<int> getPageCount(String name) =>
     _channel.invokeMethod("getPageCount", <String, dynamic>{'name': name});
+
+  static Future<int> clearFiles() =>
+    _channel.invokeMethod("clearFiles");
 
   static Future<bool> checkWriteExternalStoragePermission() =>
     SimplePermissions.checkPermission(Permission.WriteExternalStorage);

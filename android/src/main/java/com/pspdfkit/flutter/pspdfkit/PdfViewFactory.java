@@ -55,10 +55,6 @@ public class PdfViewFactory extends PlatformViewFactory {
         PdfConfiguration config = configBuilder.build();
         String sUri = (String) args.get("uri");
         String documentName = (String) args.get("documentName");
-        PdfDocument doc = null;
-        if (documentName != null) {
-           doc = openPdfs.get(documentName);
-        }
         HashMap rect = (HashMap) args.get("rect");
         if (sUri != null && Uri.parse(sUri).getScheme() == null) {
             if (sUri.startsWith("/")) {
@@ -66,6 +62,6 @@ public class PdfViewFactory extends PlatformViewFactory {
             }
             sUri = FILE_SCHEME + sUri;
         }
-        return new FlutterPdfView(context, this.messenger, i, sUri == null ? null : Uri.parse(sUri), config, rect, (FragmentActivity) activity, doc, messageChannel);
+        return new FlutterPdfView(context, this.messenger, i, sUri == null ? null : Uri.parse(sUri), config, rect, (FragmentActivity) activity, documentName, openPdfs, messageChannel);
     }
 }

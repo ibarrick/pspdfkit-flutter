@@ -7,8 +7,9 @@ class PdfView extends StatefulWidget {
   final String uri;
   final Function onPlatformViewCreated;
   final String documentName;
+  final bool disableFormEditing;
 
-  PdfView({this.uri, this.documentName, this.onPlatformViewCreated});
+  PdfView({this.uri, this.documentName, this.onPlatformViewCreated, this.disableFormEditing});
 
   @override
   State<StatefulWidget> createState() => _PdfViewState();
@@ -43,7 +44,8 @@ class _PdfViewState extends State<PdfView> {
                 creationParams:
                 {
                   'uri': widget.uri,
-                  'documentName': widget.documentName
+                  'documentName': widget.documentName,
+                  'disableFormEditing': widget.disableFormEditing
                 }
                 ,
                 creationParamsCodec: StandardMessageCodec()
@@ -137,6 +139,10 @@ class PdfViewController {
 
   Future<void> setPage(int i) async {
     return _channel.invokeMethod('setPage', {'page': i});
+  }
+
+  Future<void> reloadDocument() async {
+    return _channel.invokeMethod('reloadDocument');
   }
 }
 

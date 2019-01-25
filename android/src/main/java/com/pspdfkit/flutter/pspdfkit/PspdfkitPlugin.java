@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import androidx.fragment.app.FragmentActivity;
 import io.flutter.plugin.common.BasicMessageChannel;
@@ -205,7 +206,8 @@ public class PspdfkitPlugin implements MethodCallHandler {
                         .changeFormsOfType(FormType.LISTBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.TEXT, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.RADIOBUTTON, PdfProcessorTask.AnnotationProcessingMode.FLATTEN);
-                outputFile = new File(getFilesDir(this.context) + "/" + name + ".pdf");
+                UUID uuid = UUID.randomUUID();
+                outputFile = new File(getFilesDir(this.context) + "/" + name + uuid.toString() + ".pdf");
                 PdfProcessor.processDocument(task, outputFile);
                 PdfDocument newDoc = null;
                 try {

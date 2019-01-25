@@ -32,25 +32,25 @@ class Pspdfkit {
     _channel.invokeMethod('mergePdfs', <String, dynamic>{'outputPath': outputPath, 'names': names});
 
    static Future<bool> checkSignature({String name, String fieldName}) =>
-    _channel.invokeMethod('checkSignature', <String, dynamic>{'name': name, 'fieldName': fieldName});
+    _channel.invokeMethod('checkSignature', <String, dynamic>{'name': name, 'fieldName': fieldName}) as Future<bool>;
 
    static Future<void> savePdf({String name, String outputPath}) =>
     _channel.invokeMethod("savePdf", <String, dynamic>{'name': name, 'outputPath': outputPath});
 
    static Future<bool> checkPdf(name) =>
-    _channel.invokeMethod("checkPdf", <String, dynamic>{'name': name});
+    _channel.invokeMethod("checkPdf", <String, dynamic>{'name': name}) as Future<bool>;
 
    static Future<bool> flattenSignatures(String name) =>
-    _channel.invokeMethod("flattenSignatures", <String, dynamic>{'name': name});
+    _channel.invokeMethod("flattenSignatures", <String, dynamic>{'name': name}) as Future<bool>;
 
    static Future<void> renameEstimateFields(String name) =>
     _channel.invokeMethod("renameEstimateFields", <String, dynamic> {'name': name});
 
    static Future<int> getPageCount(String name) =>
-    _channel.invokeMethod("getPageCount", <String, dynamic>{'name': name});
+    _channel.invokeMethod("getPageCount", <String, dynamic>{'name': name}) as Future<int>;
 
   static Future<int> clearFiles() =>
-    _channel.invokeMethod("clearFiles");
+    _channel.invokeMethod("clearFiles") as Future<int>;
 
   static Future<bool> checkWriteExternalStoragePermission() =>
     SimplePermissions.checkPermission(Permission.WriteExternalStorage);

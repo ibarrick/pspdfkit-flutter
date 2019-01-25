@@ -31,9 +31,9 @@ class Pspdfkit {
    static Future<void> mergePdfs({String outputPath, List<String> names}) =>
     _channel.invokeMethod('mergePdfs', <String, dynamic>{'outputPath': outputPath, 'names': names});
 
-   static Future<bool> checkSignature({String name, String fieldName}) async {
+   static Future<bool> checkSignature(String name) async {
      final bool ret = await _channel.invokeMethod('checkSignature',
-         <String, dynamic>{'name': name, 'fieldName': fieldName});
+         <String, dynamic>{'name': name});
      return ret;
    }
 

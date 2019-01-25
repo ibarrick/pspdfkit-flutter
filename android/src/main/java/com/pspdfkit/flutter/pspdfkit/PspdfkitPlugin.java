@@ -106,20 +106,25 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 mapping.put("Signature", "EstimateSignature");
                 task = PdfProcessorTask.fromDocument(doc)
                         .setFormFieldNameMappings(mapping);
-                outputFile = new File(getFilesDir(this.context) + "/" + name + "-renamed.pdf");
+                UUID estimateUuid = UUID.randomUUID();
+                outputFile = new File(getFilesDir(this.context) + "/" + name + estimateUuid.toString() + "-renamed.pdf");
                 PdfProcessor.processDocument(task, outputFile);
                 doc = null;
                 try {
                     doc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
+                    result.error(null,null,null);
+                    return;
                 }
                 openPdfs.put(name, doc);
                 result.success(null);
+                break;
             case "openPdfDocument":
                 documentPath = call.argument("uri");
                 if (documentPath == null) {
                     result.error("Document Path is Null", "", null);
+                    return;
                 }
                 if (Uri.parse(documentPath).getScheme() == null) {
                     if (documentPath.startsWith("/")) {
@@ -135,6 +140,8 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     doc = PdfDocumentLoader.openDocument(this.context, source);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    result.error(null,null,null);
+                    return;
                 }
                 if (doc != null) {
                     openPdfs.put(name, doc);
@@ -214,6 +221,8 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     newDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
+                    result.error(null,null,null);
+                    return;
                 }
                 openPdfs.put(name, newDoc);
                 result.success(null);
@@ -222,7 +231,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 File dir = new File(getFilesDir(this.context));
                 File[] files = dir.listFiles();
                 if (files != null) {
-                    for (int i = 0; i < dir.length(); ++i) {
+                    for (int i = 0; i < files.length; ++i) {
                         files[i].delete();
                     }
                 }
@@ -242,6 +251,8 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     outDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
+                    result.error(null,null,null);
+                    return;
                 }
                 openPdfs.put(name, outDoc);
                 result.success(null);
@@ -266,17 +277,11 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     mergedDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
+                    result.error(null,null,null);
+                    return;
                 }
                 openPdfs.put("merged", mergedDoc);
-                if (mergedDoc != null) {
-                    AnnotationProvider annotationProvider = mergedDoc.getAnnotationProvider();
-                    List<Annotation> annotations = annotationProvider.getAnnotations(0);
-                    for (int i = 0; i < annotations.size(); ++i) {
-                        if (annotations.get(i).getName() != null) {
-                            Log.d("HELLO", annotations.get(i).getName());
-                        }
-                    }
-                }
+
                 result.success(null);
                 break;
             case "savePdf":
@@ -288,6 +293,8 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     doc.save(outputPath);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    result.error(null,null,null);
+                    return;
                 }
 
                 result.success(null);
@@ -337,12 +344,17 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     result.success(false);
                 } else {
                     formProvider = doc.getFormProvider();
-                    FormElement formElement = formProvider.getFormElementWithName(fieldName);
-                    if (formElement instanceof SignatureFormElement) {
-                        InkAnnotation ink = ((SignatureFormElement) formElement).getOverlappingInkSignature();
-                        result.success(ink != null && ink.isSignature());
+                    List<FormElement> elements = formProvider.getFormElements();
+                    for (int i = 0; i < elements.size(); ++i) {
+                        FormElement formElement = elements.get(i);
+                        if (formElement instanceof SignatureFormElement) {
+                            InkAnnotation ink = ((SignatureFormElement) formElement).getOverlappingInkSignature();
+                            result.success(ink != null && ink.isSignature());
+                            return;
+                        }
                     }
                 }
+                result.success(false);
                 break;
             default:
                 result.notImplemented();

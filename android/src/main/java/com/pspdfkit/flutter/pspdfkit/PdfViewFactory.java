@@ -51,6 +51,7 @@ public class PdfViewFactory extends PlatformViewFactory {
         if (args.get("doublePageLayout") == null || !((boolean) args.get("doublePageLayout"))) {
             configBuilder.layoutMode(PageLayoutMode.SINGLE);
         }
+        configBuilder.disableAnnotationEditing();
         configBuilder.signatureSavingStrategy(SignatureSavingStrategy.NEVER_SAVE);
         PdfConfiguration config = configBuilder.build();
         String sUri = (String) args.get("uri");

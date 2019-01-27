@@ -179,7 +179,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                         textElement.setText(args.get(formName));
                     } else if (field.getType() == FormType.CHECKBOX) {
                         CheckBoxFormElement checkBoxElement = (CheckBoxFormElement) field.getFormElement();
-                        if (args.get( (Boolean) args.get(field.getName()))) {
+                        if ((Boolean) args.get(field.getName())) {
                             checkBoxElement.toggleSelection();
                         }
                     }

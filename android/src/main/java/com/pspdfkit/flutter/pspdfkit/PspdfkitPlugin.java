@@ -63,6 +63,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
 
     private static HashMap<String, PdfDocument> openPdfs = new HashMap<String, PdfDocument>();
     private static HashMap<String, List<HashMap<String, Object>>> preservedFields = new HashMap<String, List<HashMap<String, Object>>>();
+
     public PspdfkitPlugin(Context context) {
         this.context = context;
     }
@@ -114,7 +115,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     doc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    result.error(null,null,null);
+                    result.error(null, null, null);
                     return;
                 }
                 openPdfs.put(name, doc);
@@ -140,7 +141,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     doc = PdfDocumentLoader.openDocument(this.context, source);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    result.error(null,null,null);
+                    result.error(null, null, null);
                     return;
                 }
                 if (doc != null) {
@@ -169,16 +170,19 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 FormProvider provider = doc.getFormProvider();
                 List<FormField> fields = provider.getFormFields();
                 for (FormField field : fields) {
-                   if (field.getType() == FormType.TEXT) {
-                       TextFormElement textElement = (TextFormElement) field.getFormElement();
-                       String formName = field.getName();
-                       textElement.setText((String) (args.get(formName) != null ? args.get(formName) : ""));
-                   } else if (field.getType() == FormType.CHECKBOX) {
-                       CheckBoxFormElement checkBoxElement = (CheckBoxFormElement)field.getFormElement();
-                       if (args.get(field.getName()) == null ? false : (Boolean) args.get(field.getName())) {
-                           checkBoxElement.toggleSelection();
-                       }
-                   }
+                    if (arts.get(formName) == null) {
+                        continue;
+                    }
+                    if (field.getType() == FormType.TEXT) {
+                        TextFormElement textElement = (TextFormElement) field.getFormElement();
+                        String formName = field.getName();
+                        textElement.setText(args.get(formName));
+                    } else if (field.getType() == FormType.CHECKBOX) {
+                        CheckBoxFormElement checkBoxElement = (CheckBoxFormElement) field.getFormElement();
+                        if (args.get( (Boolean) args.get(field.getName()))) {
+                            checkBoxElement.toggleSelection();
+                        }
+                    }
                 }
                 result.success(null);
                 break;
@@ -221,7 +225,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     newDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    result.error(null,null,null);
+                    result.error(null, null, null);
                     return;
                 }
                 openPdfs.put(name, newDoc);
@@ -251,7 +255,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     outDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    result.error(null,null,null);
+                    result.error(null, null, null);
                     return;
                 }
                 openPdfs.put(name, outDoc);
@@ -277,7 +281,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     mergedDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    result.error(null,null,null);
+                    result.error(null, null, null);
                     return;
                 }
                 openPdfs.put("merged", mergedDoc);
@@ -293,7 +297,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     doc.save(outputPath);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    result.error(null,null,null);
+                    result.error(null, null, null);
                     return;
                 }
 

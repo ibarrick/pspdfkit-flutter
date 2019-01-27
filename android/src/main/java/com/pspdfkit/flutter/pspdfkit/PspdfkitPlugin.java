@@ -170,13 +170,13 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 FormProvider provider = doc.getFormProvider();
                 List<FormField> fields = provider.getFormFields();
                 for (FormField field : fields) {
-                    if (arts.get(formName) == null) {
+                    String formName = field.getName();
+                    if (args.get(formName) == null) {
                         continue;
                     }
                     if (field.getType() == FormType.TEXT) {
                         TextFormElement textElement = (TextFormElement) field.getFormElement();
-                        String formName = field.getName();
-                        textElement.setText(args.get(formName));
+                        textElement.setText((String)args.get(formName));
                     } else if (field.getType() == FormType.CHECKBOX) {
                         CheckBoxFormElement checkBoxElement = (CheckBoxFormElement) field.getFormElement();
                         if ((Boolean) args.get(field.getName())) {
@@ -346,6 +346,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 doc = openPdfs.get(name);
                 if (doc == null) {
                     result.success(false);
+                    return;
                 } else {
                     formProvider = doc.getFormProvider();
                     List<FormElement> elements = formProvider.getFormElements();

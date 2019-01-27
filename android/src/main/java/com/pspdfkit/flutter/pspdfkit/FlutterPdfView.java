@@ -160,7 +160,7 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                 fragment.setPageIndex((fragment.getPageIndex() + 1) % fragment.getDocument().getPageCount());
                 break;
             case "decrementPage":
-                fragment.setPageIndex((fragment.getPageIndex() + 1) % fragment.getDocument().getPageCount());
+                fragment.setPageIndex(Math.floorMod(fragment.getPageIndex() - 1, fragment.getDocument().getPageCount()));
                 break;
             case "setPage":
                 fragment.setPageIndex(methodCall.argument("page"));

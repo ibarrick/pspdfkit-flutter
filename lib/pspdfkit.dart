@@ -22,6 +22,9 @@ class Pspdfkit {
   static Future<void> fillPdfForm({String name, Map<String, dynamic> fields}) =>
     _channel.invokeMethod('fillPdfForm', <String, dynamic>{'name': name, 'fields': fields});
 
+	static Future<void> fillInvoiceNumber({String name, String invoiceNumber}) =>
+    _channel.invokeMethod('fillInvoiceNum', <String, dynamic>{'name': name, 'invoiceNumber': invoiceNumber});
+
   static Future<void> flattenPdfForm(String name) =>
     _channel.invokeMethod('flattenPdfForm', <String, dynamic>{'name': name});
 
@@ -53,6 +56,9 @@ class Pspdfkit {
 
    static Future<void> renameEstimateFields(String name) =>
     _channel.invokeMethod("renameEstimateFields", <String, dynamic> {'name': name});
+
+   static Future<void> renameInvoiceFields(String name) =>
+    _channel.invokeMethod("renameInvoiceFields", <String, dynamic> {'name': name});
 
    static Future<int> getPageCount(String name) async {
      final int ret = await _channel.invokeMethod("getPageCount", <String, dynamic>{'name': name});

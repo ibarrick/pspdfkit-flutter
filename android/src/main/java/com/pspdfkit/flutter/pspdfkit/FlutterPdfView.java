@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Bundle;
@@ -213,7 +214,17 @@ class PdfFragmentContainer extends FrameLayout {
         super(c);
         this.activity = activity;
         this.fragment = fragment;
-        this.setLayoutParams(new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        FrameLayout.LayoutParams lparams = new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+//        lparams.setMargins(0,dp2px(c, 48),0,0);
+        this.setBackgroundColor(Color.parseColor("#e0e0e0"));
+        this.setPadding(0, dp2px(c, 48),0,0);
+
+        this.setLayoutParams(lparams);
+    }
+
+    private int dp2px(Context context, float dp) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dp * scale + 0.5f);
     }
 
 }

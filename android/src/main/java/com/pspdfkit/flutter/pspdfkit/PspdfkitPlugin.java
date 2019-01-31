@@ -3,13 +3,10 @@ package com.pspdfkit.flutter.pspdfkit;
 import android.content.Context;
 import android.graphics.RectF;
 import android.net.Uri;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.pspdfkit.PSPDFKit;
-import com.pspdfkit.annotations.Annotation;
-import com.pspdfkit.annotations.AnnotationProvider;
 import com.pspdfkit.annotations.AnnotationType;
 import com.pspdfkit.annotations.InkAnnotation;
 import com.pspdfkit.configuration.activity.PdfActivityConfiguration;
@@ -21,8 +18,6 @@ import com.pspdfkit.document.printing.DocumentPrintManager;
 import com.pspdfkit.document.processor.NewPage;
 import com.pspdfkit.document.processor.PdfProcessor;
 import com.pspdfkit.document.processor.PdfProcessorTask;
-import com.pspdfkit.document.sharing.DocumentSharingManager;
-import com.pspdfkit.document.sharing.ShareAction;
 import com.pspdfkit.forms.CheckBoxFormElement;
 import com.pspdfkit.forms.FormElement;
 import com.pspdfkit.forms.FormField;
@@ -34,7 +29,6 @@ import com.pspdfkit.ui.PdfActivity;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +43,9 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
-import io.flutter.plugin.common.StandardMessageCodec;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subscribers.DefaultSubscriber;
 
 import static com.pspdfkit.flutter.pspdfkit.util.Preconditions.requireNotNullNotEmpty;
 import static io.flutter.util.PathUtils.getFilesDir;
@@ -77,6 +73,27 @@ public class PspdfkitPlugin implements MethodCallHandler {
         PspdfkitPlugin plugin = new PspdfkitPlugin(registrar.activeContext());
         channel.setMethodCallHandler(plugin);
         registrar.platformViewRegistry().registerViewFactory("com.pspdfkit.flutter/pdfview", new PdfViewFactory(registrar.messenger(), (FragmentActivity) registrar.activity(), openPdfs, messageChannel));
+    }
+
+    private static void handleDocumentProcessing(PdfProcessorTask task, File outputFile, OnProcessorFinishListener onFinishListener) {
+       PdfProcessor.processDocumentAsync(task, outputFile)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new DefaultSubscriber<PdfProcessor.ProcessorProgress>() {
+                        @Override
+                        public void onNext(PdfProcessor.ProcessorProgress processorProgress) {
+
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            onFinishListener.onFinish();
+                        }
+                    });
     }
 
     @Override
@@ -109,17 +126,54 @@ public class PspdfkitPlugin implements MethodCallHandler {
                         .setFormFieldNameMappings(mapping);
                 UUID estimateUuid = UUID.randomUUID();
                 outputFile = new File(getFilesDir(this.context) + "/" + name + estimateUuid.toString() + "-renamed.pdf");
-                PdfProcessor.processDocument(task, outputFile);
                 doc = null;
-                try {
-                    doc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    result.error(null, null, null);
-                    return;
+                handleDocumentProcessing(task, outputFile, new OnProcessorFinishListener() {
+                    @Override
+                    public void onFinish() {
+                        PdfDocument doc = null;
+                        try {
+                            doc = PdfDocumentLoader.openDocument(context, Uri.fromFile(outputFile));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            result.error(null, null, null);
+                            return;
+                        }
+                        openPdfs.put(name, doc);
+                        result.success(null);
+                    }
+                });
+
+                break;
+            case "renameInvoiceFields":
+                name = call.argument("name");
+                doc = openPdfs.get(name);
+                HashMap<String, String> formMapping = new HashMap<String, String>();
+                List<FormField> fields2 = doc.getFormProvider().getFormFields();
+                UUID invUuid = UUID.randomUUID();
+                for (int i = 0; i < fields2.size(); ++i) {
+                    formMapping.put(fields2.get(i).getName(), fields2.get(i).getName() + invUuid.toString());
                 }
-                openPdfs.put(name, doc);
-                result.success(null);
+//                formMapping.put("Signature", "EstimateSignature");
+                task = PdfProcessorTask.fromDocument(doc)
+                        .setFormFieldNameMappings(formMapping);
+                outputFile = new File(getFilesDir(this.context) + "/" + name + invUuid.toString() + "-renamed.pdf");
+                doc = null;
+                handleDocumentProcessing(task, outputFile, new OnProcessorFinishListener() {
+                    @Override
+                    public void onFinish() {
+                        PdfDocument doc = null;
+                        try {
+                            doc = PdfDocumentLoader.openDocument(context, Uri.fromFile(outputFile));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            result.error(null, null, null);
+                            return;
+                        }
+                        openPdfs.put(name, doc);
+                        result.success(null);
+                    }
+                });
+
                 break;
             case "openPdfDocument":
                 documentPath = call.argument("uri");
@@ -139,6 +193,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 doc = null;
                 try {
                     doc = PdfDocumentLoader.openDocument(this.context, source);
+                    doc.invalidateCache();
                 } catch (IOException e) {
                     e.printStackTrace();
                     result.error(null, null, null);
@@ -186,6 +241,23 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 }
                 result.success(null);
                 break;
+            case "fillInvoiceNum":
+                name = call.argument("name");
+                String invoiceNumber = call.argument("invoiceNumber");
+                doc = openPdfs.get(name);
+                FormProvider provider2 = doc.getFormProvider();
+                List<FormField> fields3 = provider2.getFormFields();
+                for (FormField field : fields3) {
+                    String formName = field.getName();
+                    if (formName.indexOf("Invoice-Num") > -1) {
+                         if (field.getType() == FormType.TEXT) {
+                            TextFormElement textElement = (TextFormElement) field.getFormElement();
+                            textElement.setText(invoiceNumber);
+                         }
+                    }
+                }
+                result.success(null);
+                break;
             case "preserveFormFields":
                 name = call.argument("name");
                 List<String> fieldNames = call.argument("fieldNames");
@@ -210,26 +282,55 @@ public class PspdfkitPlugin implements MethodCallHandler {
             case "flattenPdfForm":
                 name = call.argument("name");
                 doc = openPdfs.get(name);
-                task = PdfProcessorTask.fromDocument(doc)
-                        .changeAllAnnotations(PdfProcessorTask.AnnotationProcessingMode.KEEP)
-                        .changeFormsOfType(FormType.CHECKBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
+                task = PdfProcessorTask.fromDocument(doc);
+
+//                for (int i = 0; i < doc.getPageCount(); ++i) {
+//                    task.rotatePage(i, doc.getPageRotation(i));
+//                }
+                task.changeFormsOfType(FormType.CHECKBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.COMBOBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.LISTBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.TEXT, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeFormsOfType(FormType.RADIOBUTTON, PdfProcessorTask.AnnotationProcessingMode.FLATTEN);
                 UUID uuid = UUID.randomUUID();
                 outputFile = new File(getFilesDir(this.context) + "/" + name + uuid.toString() + ".pdf");
-                PdfProcessor.processDocument(task, outputFile);
-                PdfDocument newDoc = null;
-                try {
-                    newDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    result.error(null, null, null);
-                    return;
-                }
-                openPdfs.put(name, newDoc);
-                result.success(null);
+                handleDocumentProcessing(task, outputFile, () -> {
+                    PdfDocument newDoc = null;
+                    try {
+                        newDoc = PdfDocumentLoader.openDocument(context, Uri.fromFile(outputFile));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        result.error(null, null, null);
+                        return;
+                    }
+                    openPdfs.put(name, newDoc);
+                    result.success(null);
+                });
+                break;
+            case "flattenPdfForm2":
+                name = call.argument("name");
+                doc = openPdfs.get(name);
+                task = PdfProcessorTask.fromDocument(doc)
+//                        .changeAllAnnotations(PdfProcessorTask.AnnotationProcessingMode.KEEP)
+                        .changeFormsOfType(FormType.CHECKBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
+                        .changeFormsOfType(FormType.COMBOBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
+                        .changeFormsOfType(FormType.LISTBOX, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
+                        .changeFormsOfType(FormType.TEXT, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
+                        .changeFormsOfType(FormType.RADIOBUTTON, PdfProcessorTask.AnnotationProcessingMode.FLATTEN);
+                UUID uuid2 = UUID.randomUUID();
+                outputFile = new File(getFilesDir(this.context) + "/" + name + uuid2.toString() + ".pdf");
+                handleDocumentProcessing(task, outputFile, () -> {
+                    PdfDocument newDoc = null;
+                    try {
+                        newDoc = PdfDocumentLoader.openDocument(context, Uri.fromFile(outputFile));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        result.error(null, null, null);
+                        return;
+                    }
+                    openPdfs.put(name, newDoc);
+                    result.success(null);
+                });
                 break;
             case "clearFiles":
                 File dir = new File(getFilesDir(this.context));
@@ -249,17 +350,19 @@ public class PspdfkitPlugin implements MethodCallHandler {
                         .changeFormsOfType(FormType.SIGNATURE, PdfProcessorTask.AnnotationProcessingMode.FLATTEN)
                         .changeAnnotationsOfType(AnnotationType.INK, PdfProcessorTask.AnnotationProcessingMode.FLATTEN);
                 outputFile = new File(getFilesDir(this.context) + "/" + name + "-signed.pdf");
-                PdfProcessor.processDocument(task, outputFile);
-                PdfDocument outDoc = null;
-                try {
-                    outDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    result.error(null, null, null);
-                    return;
-                }
-                openPdfs.put(name, outDoc);
-                result.success(null);
+                handleDocumentProcessing(task, outputFile, () -> {
+                    PdfDocument outDoc = null;
+                    try {
+                        outDoc = PdfDocumentLoader.openDocument(context, Uri.fromFile(outputFile));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        result.error(null, null, null);
+                        return;
+                    }
+                    openPdfs.put(name, outDoc);
+                    result.success(null);
+                });
+
                 break;
             case "mergePdfs":
                 List<String> names = call.argument("names");
@@ -276,17 +379,20 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 }
                 outputFile = new File(outputPath);
                 PdfProcessor.processDocument(mergeTask, outputFile);
-                PdfDocument mergedDoc = null;
-                try {
-                    mergedDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    result.error(null, null, null);
-                    return;
-                }
-                openPdfs.put("merged", mergedDoc);
+                handleDocumentProcessing(mergeTask, outputFile, () -> {
+                    PdfDocument mergedDoc = null;
+                    try {
+                        mergedDoc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        result.error(null, null, null);
+                        return;
+                    }
+                    openPdfs.put("merged", mergedDoc);
 
-                result.success(null);
+                    result.success(null);
+                });
+
                 break;
             case "savePdf":
                 name = call.argument("name");

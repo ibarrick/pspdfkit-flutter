@@ -387,6 +387,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     result.error("IOException", "Error in Flattening signatures", null);
                 }
                 openPdfs.put(name, outDoc);
+                result.success(null);
 //                handleDocumentProcessing(task, outputFile, () -> {
 //                    PdfDocument outDoc = null;
 //                    try {

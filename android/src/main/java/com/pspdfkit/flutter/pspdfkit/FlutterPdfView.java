@@ -246,12 +246,14 @@ class PageListener implements DocumentListener {
     public void onDocumentLoaded(@NonNull PdfDocument pdfDocument) {
         if (result != null) {
             result.success(null);
+            Log.d("SERVISUITE", "On Document Loaded fired");
         }
     }
 
     @Override
     public void onDocumentLoadFailed(@NonNull Throwable throwable) {
-
+        Log.d("SERVISUITE", "On Document Loaded failed!");
+        throwable.printStackTrace();
     }
 
     @Override

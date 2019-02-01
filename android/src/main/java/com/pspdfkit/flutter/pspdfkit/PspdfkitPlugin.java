@@ -126,6 +126,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                         .setFormFieldNameMappings(mapping);
                 UUID estimateUuid = UUID.randomUUID();
                 outputFile = new File(getFilesDir(this.context) + "/" + name + estimateUuid.toString() + "-renamed.pdf");
+                PdfProcessor.processDocument(task, outputFile);
                 doc = null;
                 try {
                     doc = PdfDocumentLoader.openDocument(this.context, Uri.fromFile(outputFile));

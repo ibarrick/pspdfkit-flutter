@@ -119,9 +119,10 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 break;
             case "renameEstimateFields":
                 name = call.argument("name");
+                String index = call.argument("index");
                 doc = openPdfs.get(name);
                 HashMap<String, String> mapping = new HashMap<String, String>();
-                mapping.put("Signature", "EstimateSignature");
+                mapping.put("Signature", "EstimateSignature-" + index + "-");
                 task = PdfProcessorTask.fromDocument(doc)
                         .setFormFieldNameMappings(mapping);
                 UUID estimateUuid = UUID.randomUUID();
@@ -514,6 +515,20 @@ public class PspdfkitPlugin implements MethodCallHandler {
                     }
                 }
                 result.success(false);
+                break;
+            case "getSignatures":
+                name = call.argument("name");
+                doc = openPdfs.get(name);
+                List<FormElement> formElements = doc.getFormProvider().getFormElements();
+                HashMap<String, Object> ret = new HashMap<String,Object>();
+                for (int i = 0; i < formElements.size(); ++i) {
+                    FormElement element = formElements.get(i);
+                    if (element instanceof SignatureFormElement) {
+                        InkAnnotation ink = ((SignatureFormElement) element).getOverlappingInkSignature();
+                        ret.put(element.getName(), ink != null && ink.isSignature());
+                    }
+                }
+                result.success(ret);
                 break;
             default:
                 result.notImplemented();

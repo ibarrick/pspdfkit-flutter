@@ -54,8 +54,13 @@ class Pspdfkit {
      return ret;
    }
 
-   static Future<void> renameEstimateFields(String name) =>
-    _channel.invokeMethod("renameEstimateFields", <String, dynamic> {'name': name});
+   static Future<Map> getSignatures(String name) async {
+     final Map ret = await _channel.invokeMethod("getSignatures", <String, dynamic>{'name': name});
+     return ret;
+   }
+
+   static Future<void> renameEstimateFields(String name, int index) =>
+    _channel.invokeMethod("renameEstimateFields", <String, dynamic> {'name': name, 'index': index.toString()});
 
    static Future<void> renameInvoiceFields(String name) =>
     _channel.invokeMethod("renameInvoiceFields", <String, dynamic> {'name': name});

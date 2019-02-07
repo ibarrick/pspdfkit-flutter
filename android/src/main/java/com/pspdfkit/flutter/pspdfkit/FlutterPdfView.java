@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.pspdfkit.annotations.Annotation;
 import com.pspdfkit.annotations.InkAnnotation;
 import com.pspdfkit.configuration.PdfConfiguration;
+import com.pspdfkit.configuration.signatures.SignatureSavingStrategy;
 import com.pspdfkit.document.DocumentSaveOptions;
 import com.pspdfkit.document.PdfDocument;
 import com.pspdfkit.forms.FormElement;
@@ -25,6 +26,7 @@ import com.pspdfkit.forms.FormType;
 import com.pspdfkit.listeners.DocumentListener;
 import com.pspdfkit.signatures.Signature;
 import com.pspdfkit.ui.PdfFragment;
+import com.pspdfkit.ui.signatures.SignatureOptions;
 import com.pspdfkit.ui.signatures.SignaturePickerFragment;
 
 import java.util.HashMap;
@@ -130,6 +132,7 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                 } else {
                     builder.enableFormEditing();
                 }
+                builder.signatureSavingStrategy(SignatureSavingStrategy.NEVER_SAVE);
                 config = builder.build();
                 PdfFragment fragment2 = PdfFragment.newInstance(fragment.getDocument(), config);
                 fm = activity.getSupportFragmentManager();
@@ -167,6 +170,9 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                 fragment.setPageIndex(methodCall.argument("page"));
                 break;
             case "collectSignature":
+                SignatureOptions.Builder builder1 = new SignatureOptions.Builder();
+                builder1.signatureSavingStrategy(SignatureSavingStrategy.NEVER_SAVE);
+                SignatureOptions options = builder1.build();
                 SignaturePickerFragment.show(activity.getSupportFragmentManager(), new SignaturePickerFragment.OnSignaturePickedListener() {
                     @Override
                     public void onSignaturePicked(@NonNull Signature signature) {
@@ -187,7 +193,7 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                     public void onDismiss() {
 
                     }
-                });
+                }, options);
                 break;
             default:
                 result.notImplemented();

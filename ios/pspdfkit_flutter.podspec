@@ -15,7 +15,9 @@ PSPDFKit flutter plugin.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'PSPDFKit'
+  s.dependency 'PSPDFKitSwift'
+  s.dependency 'PSPDFKit/Swift'
+#  s.dependency 'PSPDFKit'
   
   s.ios.deployment_target = '10.0'
 end

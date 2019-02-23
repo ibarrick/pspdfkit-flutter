@@ -213,7 +213,7 @@ public class PspdfkitPlugin implements MethodCallHandler {
                 try {
                     doc = PdfDocumentLoader.openDocument(this.context, source);
                     doc.invalidateCache();
-                    PSPDFKit.clearCaches();
+                    PSPDFKit.clearCaches(context, true);
                 } catch (IOException e) {
                     e.printStackTrace();
                     result.error(null, null, null);

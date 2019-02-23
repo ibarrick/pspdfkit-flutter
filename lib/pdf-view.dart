@@ -24,7 +24,7 @@ class _PdfViewState extends State<PdfView> {
 	@override
 	Widget build(BuildContext context2) {
 		return Container(
-			child: AndroidView(
+			child: defaultTargetPlatform == TargetPlatform.android ? AndroidView(
 				viewType: 'com.pspdfkit.flutter/pdfview',
 				onPlatformViewCreated: (int id) {
 					if (widget.onPlatformViewCreated != null) {
@@ -38,8 +38,23 @@ class _PdfViewState extends State<PdfView> {
 					'disableFormEditing': widget.disableFormEditing
 				}
 				,
-				creationParamsCodec: StandardMessageCodec()
-			)
+				creationParamsCodec: const StandardMessageCodec()
+			) :
+					UiKitView(
+						viewType: "PdfView",
+						onPlatformViewCreated: (int id) {
+							if (widget.onPlatformViewCreated != null) {
+								widget.onPlatformViewCreated(new PdfViewController._(id));
+							}
+						},
+						creationParams:
+							{
+								'uri': widget.uri,
+								'documentName': widget.documentName,
+								'disableFormEditing': widget.disableFormEditing
+							},
+						creationParamsCodec: const StandardMessageCodec(),
+					)
 		);
 	}
 }

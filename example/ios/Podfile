@@ -1,6 +1,5 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '10.0'
-use_frameworks!
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -33,14 +32,16 @@ def parse_KV_file(file, separator='=')
   return pods_ary
 end
 
+pod 'PSPDFKitSwift', :git => 'https://github.com/PSPDFKit/PSPDFKitSwift.git', :tag => '1.1.2'
+
 target 'Runner' do
-  pod 'PSPDFKit', podspec:'https://customers.pspdfkit.com/cocoapods/YOUR_COCOAPODS_KEY_GOES_HERE/pspdfkit/latest.podspec'
-  
+  use_frameworks!
+
   # Prepare symlinks folder. We use symlinks to avoid having Podfile.lock
   # referring to absolute paths on developers' machines.
   system('rm -rf .symlinks')
   system('mkdir -p .symlinks/plugins')
-
+  pod 'PSPDFKit/Swift', podspec:'https://customers.pspdfkit.com/cocoapods/3GCe2JDoSyLbxb8hD2q4yoJKqG77ZZ/latest.podspec'
   # Flutter Pods
   generated_xcode_build_settings = parse_KV_file('./Flutter/Generated.xcconfig')
   if generated_xcode_build_settings.empty?

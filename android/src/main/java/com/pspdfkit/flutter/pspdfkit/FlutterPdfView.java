@@ -25,6 +25,8 @@ import com.pspdfkit.forms.FormElement;
 import com.pspdfkit.forms.FormType;
 import com.pspdfkit.listeners.DocumentListener;
 import com.pspdfkit.signatures.Signature;
+import com.pspdfkit.signatures.storage.DatabaseSignatureStorage;
+import com.pspdfkit.signatures.storage.SignatureStorage;
 import com.pspdfkit.ui.PdfFragment;
 import com.pspdfkit.ui.signatures.SignatureOptions;
 import com.pspdfkit.ui.signatures.SignaturePickerFragment;
@@ -176,6 +178,12 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                 SignatureOptions.Builder builder1 = new SignatureOptions.Builder();
                 builder1.signatureSavingStrategy(SignatureSavingStrategy.NEVER_SAVE);
                 SignatureOptions options = builder1.build();
+                SignatureStorage storage = DatabaseSignatureStorage.withName(context, "servisuite_signatures");
+                try {
+                    storage.clear();
+                } catch (Exception e) {
+                   // do nothing (I don't think this is plausible, we don't want them stored anyways)
+                }
                 SignaturePickerFragment.show(activity.getSupportFragmentManager(), new SignaturePickerFragment.OnSignaturePickedListener() {
                     @Override
                     public void onSignaturePicked(@NonNull Signature signature) {
@@ -196,7 +204,7 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
                     public void onDismiss() {
 
                     }
-                }, options);
+                }, options,storage);
                 break;
             default:
                 result.notImplemented();

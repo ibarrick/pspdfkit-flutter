@@ -30,6 +30,7 @@ public class SwiftPspdfkitFlutterPlugin: NSObject, FlutterPlugin {
             var documentPath:String = dic!["uri"] as! String;
             let name:String = dic!["name"] as! String;
             let document = PSPDFDocument.init(url: URL.init(fileURLWithPath: documentPath));
+			document.clearCache();
             SwiftPspdfkitFlutterPlugin.openPdfs[name] = document;
             result(nil);
         case "checkPdf":

@@ -102,6 +102,7 @@ public class PdfView : NSObject, FlutterPlatformView {
                 editableAnnotationTypes.remove(AnnotationString.widget);
             }
             builder.editableAnnotationTypes = editableAnnotationTypes;
+            builder.overrideClass(PSPDFConflictResolutionManager.self, with: AlwaysReloadConflictResolver.self);
         }
         
         let documentName:String = dic["documentName"] as! String;
@@ -181,5 +182,11 @@ public class PageNotifierDelegate : NSObject, PSPDFDocumentViewControllerDelegat
         var msg:[String:Int] = [:];
         msg["page"] = documentViewController.spreadIndex;
         messageChannel.sendMessage(msg);
+    }
+}
+
+public class AlwaysReloadConflictResolver : PSPDFConflictResolutionManager {
+    override public func controllerForExternalFileChangeResolution(on: PSPDFDocument, dataProvider: PSPDFCoordinatedFileDataProviding) -> UIViewController? {
+        return nil;
     }
 }

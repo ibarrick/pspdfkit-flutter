@@ -80,7 +80,9 @@ public class FlutterPdfView implements PlatformView, MethodChannel.MethodCallHan
             public void onFragmentActivityCreated(FragmentManager fm, Fragment f, Bundle savedInstanceState) {
                 super.onFragmentActivityCreated(fm, f, savedInstanceState);
                 if (f instanceof PdfFragment) {
-                    containerView.addView(f.getView());
+                    if (f.getView().getParent()) {
+                        containerView.addView(f.getView());
+                    }
                     fm.unregisterFragmentLifecycleCallbacks(this);
                 }
             }

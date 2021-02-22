@@ -6,6 +6,10 @@
 
     <application android:largeHeap="true">
         <meta-data
+                android:name="flutterEmbedding"
+                android:value="2" />
+
+        <meta-data
             android:name="pspdfkit_license_key"
             android:value="YOUR_LICENSE_KEY_GOES_HERE"/>
 

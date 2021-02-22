@@ -2,6 +2,7 @@ package com.pspdfkit.flutter.pspdfkit;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 
 import com.pspdfkit.PSPDFKit;
 import com.pspdfkit.configuration.PdfConfiguration;
@@ -42,7 +43,7 @@ public class PdfViewFactory extends PlatformViewFactory {
     }
     @Override
     public PlatformView create(Context context, int i, Object o) {
-
+        Log.println(Log.DEBUG, "Plugin", "Creating PdfView");
         HashMap args = (HashMap) o;
         PdfConfiguration.Builder configBuilder = new PdfConfiguration.Builder();
         if (args.get("disableFormEditing") != null && (boolean) args.get("disableFormEditing")) {
@@ -63,6 +64,7 @@ public class PdfViewFactory extends PlatformViewFactory {
             }
             sUri = FILE_SCHEME + sUri;
         }
+        Log.println(Log.DEBUG, "Plugin", "Returning PdfView");
         return new FlutterPdfView(context, this.messenger, i, sUri == null ? null : Uri.parse(sUri), config, rect, (FragmentActivity) activity, documentName, openPdfs, messageChannel);
     }
 }

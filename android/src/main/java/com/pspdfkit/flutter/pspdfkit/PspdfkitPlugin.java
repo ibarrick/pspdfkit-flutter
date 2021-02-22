@@ -3,6 +3,7 @@ package com.pspdfkit.flutter.pspdfkit;
 import android.content.Context;
 import android.graphics.RectF;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -37,11 +38,17 @@ import java.util.UUID;
 
 import androidx.fragment.app.FragmentActivity;
 import io.flutter.plugin.common.BasicMessageChannel;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.JSONMessageCodec;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.platform.PlatformViewRegistry;
+
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -53,9 +60,12 @@ import static io.flutter.util.PathUtils.getFilesDir;
 /**
  * Pspdfkit Plugin.
  */
-public class PspdfkitPlugin implements MethodCallHandler {
+public class PspdfkitPlugin implements MethodCallHandler, FlutterPlugin, ActivityAware {
     private static final String FILE_SCHEME = "file:///";
-    private final Context context;
+    private Context context;
+    private BinaryMessenger messenger;
+    private PlatformViewRegistry registry;
+    private BasicMessageChannel messageChannel;
 
     private static HashMap<String, PdfDocument> openPdfs = new HashMap<String, PdfDocument>();
     private static HashMap<String, List<HashMap<String, Object>>> preservedFields = new HashMap<String, List<HashMap<String, Object>>>();
@@ -64,9 +74,42 @@ public class PspdfkitPlugin implements MethodCallHandler {
         this.context = context;
     }
 
+    public PspdfkitPlugin() {
+        this.context = null;
+    }
+
     /**
      * Plugin registration.
      */
+    public void onAttachedToEngine(FlutterPlugin.FlutterPluginBinding binding) {
+        messenger = binding.getBinaryMessenger();
+        final MethodChannel channel = new MethodChannel(binding.getBinaryMessenger(), "pspdfkit");
+        messageChannel = new BasicMessageChannel<Object>(binding.getBinaryMessenger(), "pspdfkit_messages", JSONMessageCodec.INSTANCE);
+        context = binding.getApplicationContext();
+        channel.setMethodCallHandler(this);
+        registry = binding.getPlatformViewRegistry();
+        Log.println(Log.DEBUG, "Plugin", "Attached to flutter engine");
+    }
+
+    public void onDetachedFromEngine(FlutterPlugin.FlutterPluginBinding binding) {
+        // we
+    }
+    public void onDetachedFromActivityForConfigChanges() {
+
+    }
+
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
+
+    }
+
+    public void onAttachedToActivity(ActivityPluginBinding binding) {
+        registry.registerViewFactory("com.pspdfkit.flutter/pdfview", new PdfViewFactory(messenger, (FragmentActivity) binding.getActivity(), openPdfs, messageChannel));
+    }
+
+    public void onDetachedFromActivity() {
+
+    }
+
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "pspdfkit");
         final BasicMessageChannel messageChannel = new BasicMessageChannel<Object>(registrar.messenger(), "pspdfkit_messages", JSONMessageCodec.INSTANCE);

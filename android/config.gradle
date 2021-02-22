@@ -16,33 +16,21 @@ if (pspdfkitMavenUrl == null || pspdfkitMavenUrl == '') {
     ext.pspdfkitMavenUrl = 'https://customers.pspdfkit.com/maven/'
 }
 
-ext.pspdfkitUsername = localProperties.getProperty('pspdfkit.username')
-if (pspdfkitUsername == null || pspdfkitUsername == '') {
-    ext.pspdfkitUsername = 'pspdfkit'
-}
-
-ext.pspdfkitPassword = localProperties.getProperty('pspdfkit.password')
-if (pspdfkitPassword == null || pspdfkitPassword == '') {
-    throw new GradleException("PSPDFKit password was not specified. The password is required to download the PSPDFKit AAR file into your project. Please specify as pspdfkit.password inside the local.properties file.")
-}
-
 def pspdfkitIsDemo = localProperties.getProperty('pspdfkit.demo')
-if (pspdfkitIsDemo == null) {
-    pspdfkitIsDemo = pspdfkitPassword.startsWith('TRIAL-')
-} else {
+if (pspdfkitIsDemo != null) {
     pspdfkitIsDemo = Boolean.parseBoolean(pspdfkitIsDemo)
 }
 
 ext.pspdfkitMavenModuleName = pspdfkitIsDemo ? 'pspdfkit-demo' : 'pspdfkit'
 ext.pspdfkitVersion = localProperties.getProperty('pspdfkit.version')
 if (pspdfkitVersion == null || pspdfkitVersion == '') {
-    ext.pspdfkitVersion = '5.4.2'
+    ext.pspdfkitVersion = '6.6.0'
 }
 
 ext.pspdfkitFlutterVersion = '1.0.0-SNAPSHOT'
 
-ext.androidCompileSdkVersion = 28
-ext.androidBuildToolsVersion = '28.0.3'
-ext.androidMinSdkVersion = 19
-ext.androidTargetSdkVersion = 28
+ext.androidCompileSdkVersion = 29
+ext.androidBuildToolsVersion = '29.0.1'
+ext.androidMinSdkVersion = 20
+ext.androidTargetSdkVersion = 29
 ext.androidGradlePluginVersion = '3.4.1'

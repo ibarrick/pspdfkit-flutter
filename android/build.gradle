@@ -18,10 +18,6 @@ rootProject.allprojects {
     repositories {
         maven {
             url pspdfkitMavenUrl
-            credentials {
-                username pspdfkitUsername
-                password pspdfkitPassword
-            }
         }
         google()
         jcenter()
@@ -40,7 +36,6 @@ android {
     }
 
     defaultConfig {
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         minSdkVersion androidMinSdkVersion
         targetSdkVersion androidTargetSdkVersion
     }
@@ -51,6 +46,5 @@ android {
 
 dependencies {
 	api 'androidx.palette:palette:1.0.0'
-    implementation "androidx.appcompat:appcompat:1.0.0"
     implementation "com.pspdfkit:$pspdfkitMavenModuleName:$pspdfkitVersion"
 }

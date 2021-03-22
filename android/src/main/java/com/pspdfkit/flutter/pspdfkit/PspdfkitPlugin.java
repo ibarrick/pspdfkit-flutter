@@ -63,6 +63,7 @@ import static io.flutter.util.PathUtils.getFilesDir;
 public class PspdfkitPlugin implements MethodCallHandler, FlutterPlugin, ActivityAware {
     private static final String FILE_SCHEME = "file:///";
     private Context context;
+	private Activity activity;
     private BinaryMessenger messenger;
     private PlatformViewRegistry registry;
     private BasicMessageChannel messageChannel;
@@ -103,6 +104,7 @@ public class PspdfkitPlugin implements MethodCallHandler, FlutterPlugin, Activit
     }
 
     public void onAttachedToActivity(ActivityPluginBinding binding) {
+		activity = (Activity) binding.getActivity();
         registry.registerViewFactory("com.pspdfkit.flutter/pdfview", new PdfViewFactory(messenger, (FragmentActivity) binding.getActivity(), openPdfs, messageChannel));
     }
 
@@ -513,9 +515,9 @@ public class PspdfkitPlugin implements MethodCallHandler, FlutterPlugin, Activit
                 }
                 boolean imageDocument = isImageDocument(documentPath);
                 if (imageDocument) {
-                    PdfActivity.showImage(context, Uri.parse(documentPath), new PdfActivityConfiguration.Builder(context).build());
+                    PdfActivity.showImage(activity, Uri.parse(documentPath), new PdfActivityConfiguration.Builder(context).build());
                 } else {
-                    PdfActivity.showDocument(context, Uri.parse(documentPath), new PdfActivityConfiguration.Builder(context).build());
+                    PdfActivity.showDocument(activity, Uri.parse(documentPath), new PdfActivityConfiguration.Builder(context).build());
                 }
                 break;
             case "printDocument":

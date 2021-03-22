@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import android.app.Activity;
 
 import com.pspdfkit.PSPDFKit;
 import com.pspdfkit.annotations.AnnotationType;

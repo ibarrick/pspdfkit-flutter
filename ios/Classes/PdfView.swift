@@ -12,7 +12,7 @@ func ScaleForSizeWithinSize(targetSize: CGSize, boundsSize:CGSize) -> CGFloat {
 
 var defaultFormColor: UIColor? = nil;
 
-func fBuild(viewController: PSPDFViewController, signatureDelegate: PSPDFSignatureViewControllerDelegate, documentName: String) -> FlutterMethodCallHandler {
+func fBuild(viewController: PDFViewController, signatureDelegate: SignatureViewControllerDelegate, documentName: String) -> FlutterMethodCallHandler {
     return {
         (call: FlutterMethodCall, result: FlutterResult) in
             let dic = call.arguments as? [String: Any];
@@ -26,17 +26,17 @@ func fBuild(viewController: PSPDFViewController, signatureDelegate: PSPDFSignatu
                 viewController.updateConfiguration(builder: {builder in
                     var editableAnnotationTypes = builder.editableAnnotationTypes
                     if (isEnabled) {
-                        editableAnnotationTypes?.remove(AnnotationString.widget);
+                        editableAnnotationTypes?.remove(Annotation.Tool.widget);
                     } else {
-                        editableAnnotationTypes?.insert(AnnotationString.widget);
+                        editableAnnotationTypes?.insert(Annotation.Tool.widget);
                     }
                     builder.editableAnnotationTypes = editableAnnotationTypes;
                 });
                 let doc = viewController.document!;
                 if (isEnabled) {
-                    doc.updateRenderOptions([PSPDFRenderOption.interactiveFormFillColorKey: UIColor.clear], type:PSPDFRenderType.all)
+                    doc.updateRenderOptions(for: RenderType.all, with: { (options :RenderOptions) -> Void in options.interactiveFormFillColor = UIColor.clear; })
                 } else {
-                    doc.updateRenderOptions([PSPDFRenderOption.interactiveFormFillColorKey:  UIColor.blue.withAlphaComponent(0.2)], type:PSPDFRenderType.all)
+                    doc.updateRenderOptions(for: RenderType.all, with: { (options :RenderOptions) -> Void in options.interactiveFormFillColor = UIColor.blue.withAlphaComponent(0.2); })
                 }
                 viewController.reloadPage(at: viewController.pageIndex, animated: false)
                 result(nil)
@@ -61,14 +61,14 @@ func fBuild(viewController: PSPDFViewController, signatureDelegate: PSPDFSignatu
                 viewController.setPageIndex(index as! PageIndex, animated: true);
                 result(nil);
             case "collectSignature":
-                let signatureController: PSPDFSignatureViewController = PSPDFSignatureViewController.init();
+                let signatureController: SignatureViewController = SignatureViewController.init();
                 signatureController.delegate = signatureDelegate;
-                signatureController.savingStrategy = PSPDFSignatureSavingStrategy.neverSave;
+                signatureController.savingStrategy = SignatureSavingStrategy.neverSave;
 //                let signatureContainer:FlutterViewController = FlutterViewController.init();
 //                signatureContainer.addChildViewController(viewController)
 //                signatureController.modalPresentationStyle = .overCurrentContext;
-                var options:[String:Any] = [:];
-                options[PSPDFPresentationInNavigationControllerKey] = true;
+                var options:[PresentationOption:Any] = [:];
+                options[PresentationOption.inNavigationController] = true;
                 signatureController.modalPresentationCapturesStatusBarAppearance = true;
                 viewController.present(signatureController, options: options, animated: true, sender: nil, completion: nil);
                 result(nil);
@@ -82,37 +82,37 @@ func fBuild(viewController: PSPDFViewController, signatureDelegate: PSPDFSignatu
 public class PdfView : NSObject, FlutterPlatformView {
     let frame: CGRect
     let viewId: Int64
-    let viewController: PSPDFViewController
-    var signatureDelegate: PSPDFSignatureViewControllerDelegate
-    var viewDelegate: PSPDFDocumentViewControllerDelegate
+    let viewController: PDFViewController
+    var signatureDelegate: SignatureViewControllerDelegate
+    var viewDelegate: PDFDocumentViewControllerDelegate
     
     init(_ frame: CGRect, viewId: Int64, args: Any?, messenger: FlutterBinaryMessenger) {
         self.frame = frame;
         self.viewId = viewId;
         let dic = args as! [String: Any];
-        let configuration:PSPDFConfiguration = PSPDFConfiguration { builder in
+        let configuration:PDFConfiguration = PDFConfiguration { builder in
             builder.shouldHideNavigationBarWithUserInterface = true;
-            builder.signatureSavingStrategy = PSPDFSignatureSavingStrategy.neverSave;
+            builder.signatureSavingStrategy = SignatureSavingStrategy.neverSave;
             builder.backgroundColor = UIColor(red: 224.0/255.0, green: 224.0/255.0, blue: 224.0/255.0, alpha: 1.0);
-            var editableAnnotationTypes = Set<AnnotationString>();
-            editableAnnotationTypes.insert(AnnotationString.signature);
-            editableAnnotationTypes.insert(AnnotationString.widget);
+            var editableAnnotationTypes = Set<Annotation.Tool>();
+            editableAnnotationTypes.insert(Annotation.Tool.signature);
+            editableAnnotationTypes.insert(Annotation.Tool.widget);
             let disableFormEditing:Bool? = dic["disableFormEditing"] as? Bool
             if (disableFormEditing ?? false) {
-                editableAnnotationTypes.remove(AnnotationString.widget);
+                editableAnnotationTypes.remove(Annotation.Tool.widget);
             }
             builder.editableAnnotationTypes = editableAnnotationTypes;
-            builder.overrideClass(PSPDFConflictResolutionManager.self, with: AlwaysReloadConflictResolver.self);
+            builder.overrideClass(ConflictResolutionManager.self, with: AlwaysReloadConflictResolver.self);
         }
         
         let documentName:String = dic["documentName"] as! String;
-        let doc:PSPDFDocument = SwiftPspdfkitFlutterPlugin.openPdfs[documentName]!;
+        let doc:Document = SwiftPspdfkitFlutterPlugin.openPdfs[documentName]!;
         let disableFormEditing:Bool? = dic["disableFormEditing"] as? Bool
         if (disableFormEditing ?? false) {
-            doc.updateRenderOptions([PSPDFRenderOption.interactiveFormFillColorKey: UIColor.clear], type:PSPDFRenderType.all);
+            doc.updateRenderOptions(for: RenderType.all, with: {(options: RenderOptions) -> Void in options.interactiveFormFillColor = UIColor.clear;})
         }
         let messageChannel = FlutterBasicMessageChannel.init(name: "pspdfkit_messages", binaryMessenger: messenger, codec: FlutterJSONMessageCodec.sharedInstance());
-        let vController = PSPDFViewController.init(document: doc, configuration: configuration);
+        let vController = PDFViewController.init(document: doc, configuration: configuration);
         self.viewController = vController;
         self.signatureDelegate = SignatureDelegate.init(documentName: documentName);
         self.viewDelegate = PageNotifierDelegate.init(messageChannel: messageChannel);
@@ -134,36 +134,38 @@ public class PdfView : NSObject, FlutterPlatformView {
     }
 }
 
-public class SignatureDelegate : NSObject, PSPDFSignatureViewControllerDelegate {
+public class SignatureDelegate : NSObject, SignatureViewControllerDelegate {
     var documentName:String;
     
     init(documentName: String) {
         self.documentName = documentName;
     }
   
-    public func signatureViewControllerDidFinish(_ signatureController: PSPDFSignatureViewController, with signer: PSPDFSigner?, shouldSaveSignature: Bool) {
-        let lines = signatureController.lines;
-        let document:PSPDFDocument = SwiftPspdfkitFlutterPlugin.openPdfs[documentName]!;
+    public func signatureViewControllerDidFinish(_ signatureController: SignatureViewController, with signer: PDFSigner?, shouldSaveSignature: Bool) {
+        let lines = signatureController.drawView.pointSequences.map{ $0.map({ NSValue.valueWithDrawingPoint($0) }) }
+        //let lines = signatureController.lines;
+        let document:Document = SwiftPspdfkitFlutterPlugin.openPdfs[documentName]!;
         for i in 0..<document.pageCount {
             for annotation in document.annotationsForPage(at: i, type: .widget) {
-                if (annotation is PSPDFSignatureFormElement) {
-                    let name:String? = (annotation as! PSPDFSignatureFormElement).fieldName
+                if (annotation is SignatureFormElement) {
+                    let name:String? = (annotation as! SignatureFormElement).fieldName
                     if (name != nil && !(name!.contains("Estimate"))) {
                         let boundingBox = annotation.boundingBox;
                         let pageInfo = document.pageInfoForPage(at: i)!;
                         var rect = CGRect.init();
                         rect.size = pageInfo.size;
-                        let newLines = PSPDFConvertViewLinesToPDFLines(lines, pageInfo, rect);
-                        var annotationSize = PSPDFBoundingBoxFromLines(newLines, 1.0).size;
+                        let newLines = ConvertViewLines(pdfLines: lines, pageInfo: pageInfo, viewBounds: rect);
+                        let newLinesPoints = newLines.map { $0.map({ $0.drawingPointValue }) }
+                        var annotationSize = BoundingBoxFromLines(newLines, lineWidth: 1.0).size;
                         let maxSize = boundingBox.size;
                         let scale = ScaleForSizeWithinSize(targetSize: annotationSize, boundsSize: maxSize);
                         annotationSize = CGSize.init(width: lround(Double(annotationSize.width * scale)), height: lround(Double(annotationSize.height * scale)));
-                        let ink = PSPDFInkAnnotation.init(lines: newLines);
+                        let ink = InkAnnotation.init(lines: newLinesPoints);
                         ink.absolutePageIndex = i;
                         let x = boundingBox.minX + (boundingBox.width - annotationSize.width) / 2.0;
                         let y = boundingBox.minY;
                         ink.boundingBox = CGRect.init(x: x, y: y, width: annotationSize.width, height: annotationSize.height);
-                        document.add([ink], options: nil);
+                        document.add(annotations: [ink], options: nil);
                     }
                 }
             }
@@ -172,21 +174,21 @@ public class SignatureDelegate : NSObject, PSPDFSignatureViewControllerDelegate 
     }
 }
 
-public class PageNotifierDelegate : NSObject, PSPDFDocumentViewControllerDelegate {
+public class PageNotifierDelegate : NSObject, PDFDocumentViewControllerDelegate {
     let messageChannel:FlutterBasicMessageChannel
     
     init(messageChannel: FlutterBasicMessageChannel) {
         self.messageChannel = messageChannel;
     }
-    public func documentViewController(_ documentViewController: PSPDFDocumentViewController, didChangeSpreadIndex oldSpreadIndex: Int) {
+    public func documentViewController(_ documentViewController: PDFDocumentViewController, didChangeSpreadIndex oldSpreadIndex: Int) {
         var msg:[String:Int] = [:];
         msg["page"] = documentViewController.spreadIndex;
         messageChannel.sendMessage(msg);
     }
 }
 
-public class AlwaysReloadConflictResolver : PSPDFConflictResolutionManager {
-    override public func controllerForExternalFileChangeResolution(on: PSPDFDocument, dataProvider: PSPDFCoordinatedFileDataProviding) -> UIViewController? {
+public class AlwaysReloadConflictResolver : ConflictResolutionManager {
+    override public func controllerForExternalFileChangeResolution(on: Document, dataProvider: CoordinatedFileDataProviding) -> UIViewController? {
         return nil;
     }
 }

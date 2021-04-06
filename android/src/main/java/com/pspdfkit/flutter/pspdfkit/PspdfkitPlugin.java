@@ -540,7 +540,7 @@ public class PspdfkitPlugin implements MethodCallHandler, FlutterPlugin, Activit
                 for (int i = 0; i < doc.getPageCount(); ++i) {
                     printTask.rotatePage(i, doc.getPageRotation(i));
                 }
-                DocumentPrintManager.get().print(this.context, doc, printTask);
+                DocumentPrintManager.get().print(activity, doc, printTask);
                 break;
             case "checkSignature":
                 name = call.argument("name");

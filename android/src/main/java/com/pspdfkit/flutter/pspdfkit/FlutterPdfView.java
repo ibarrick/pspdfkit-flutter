@@ -252,6 +252,8 @@ class PdfFragmentContainer extends FrameLayout {
 class PageListener implements DocumentListener {
     BasicMessageChannel messageChannel;
     MethodChannel.Result result;
+    Boolean sent = false;
+
     public PageListener(BasicMessageChannel messageChannel, MethodChannel.Result result) {
         this.messageChannel = messageChannel;
         this.result = result;
@@ -264,8 +266,9 @@ class PageListener implements DocumentListener {
 
     @Override
     public void onDocumentLoaded(@NonNull PdfDocument pdfDocument) {
-        if (result != null) {
+        if (result != null && !sent) {
             result.success(null);
+            sent = true;
             Log.d("SERVISUITE", "On Document Loaded fired");
         }
     }

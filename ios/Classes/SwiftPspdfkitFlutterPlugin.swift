@@ -11,6 +11,8 @@ func getDocumentsDirectory() -> URL {
 public class SwiftPspdfkitFlutterPlugin: NSObject, FlutterPlugin {
     static var openPdfs: [String: Document] = [:]
     
+    static var tempDocuments: [String: String] = [:]
+    
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "pspdfkit", binaryMessenger: registrar.messenger())
         let instance = SwiftPspdfkitFlutterPlugin()
@@ -104,10 +106,12 @@ public class SwiftPspdfkitFlutterPlugin: NSObject, FlutterPlugin {
                 let processor = Processor(configuration: configuration!, securityOptions: nil);
                 var documents = getDocumentsDirectory();
                 let uuid = UUID().uuidString
-                documents.appendPathComponent("name" + uuid + "-temp.pdf");
+                let fileName = "name" + uuid + "-temp.pdf";
+                documents.appendPathComponent(fileName);
                 try processor.write(toFileURL: documents);
                 let newDoc:Document = Document.init(url: documents);
                 SwiftPspdfkitFlutterPlugin.openPdfs[name] = newDoc;
+                SwiftPspdfkitFlutterPlugin.tempDocuments[fileName] = name;
                 newDoc
                 result(nil);
             } catch {
@@ -121,6 +125,11 @@ public class SwiftPspdfkitFlutterPlugin: NSObject, FlutterPlugin {
                 let fileNames = try fileManager.contentsOfDirectory(atPath: documentsPath);
                 for fileName in fileNames {
                     if (fileName.hasSuffix("-temp.pdf")) {
+                        let docName = SwiftPspdfkitFlutterPlugin.tempDocuments[fileName];
+                        if (docName != nil) {
+                            // this should trigger removal of document since this will be last reference (I hope)
+                            SwiftPspdfkitFlutterPlugin.openPdfs[docName] = nil;
+                        }
                         let filePath = "\(documentsPath)/\(fileName)";
                         if (fileManager.fileExists(atPath: filePath)) {
                             try fileManager.removeItem(atPath: filePath);

@@ -122,7 +122,9 @@ public class SwiftPspdfkitFlutterPlugin: NSObject, FlutterPlugin {
                 for fileName in fileNames {
                     if (fileName.hasSuffix("-temp.pdf")) {
                         let filePath = "\(documentsPath)/\(fileName)";
-                        try fileManager.removeItem(atPath: filePath);
+                        if (fileManager.fileExists(atPath: filePath)) {
+                            try fileManager.removeItem(atPath: filePath);
+                        }
                     }
                 }
                 result(nil);

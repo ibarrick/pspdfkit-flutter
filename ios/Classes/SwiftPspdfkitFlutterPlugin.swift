@@ -129,7 +129,7 @@ public class SwiftPspdfkitFlutterPlugin: NSObject, FlutterPlugin {
                         if (docName != nil) {
                             // this should trigger removal of document since this will be last reference (I hope)
 				let doc:Document = SwiftPspdfkitFlutterPlugin.openPdfs[docName!] as! Document;
-                            doc.deleteFiles();
+                            try doc.deleteFiles();
                         } else {
 				let filePath = "\(documentsPath)/\(fileName)";
 				if (fileManager.fileExists(atPath: filePath)) {
